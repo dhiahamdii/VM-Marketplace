@@ -5,6 +5,8 @@ import VMFilters from "@/components/vm-filters"
 import VMSearchBar from "@/components/vm-search-bar"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
+import SiteHeader from "@/components/site-header"
+
 
 export const metadata: Metadata = {
   title: "VM Marketplace | Browse Virtual Machines",
@@ -13,9 +15,12 @@ export const metadata: Metadata = {
 
 export default function MarketplacePage() {
   return (
+  <div className="flex flex-col min-h-screen">
+      <SiteHeader />
     <div className="container px-4 py-8 mx-auto">
       <div className="flex flex-col space-y-6">
         <div>
+          
           <h1 className="text-3xl font-bold tracking-tight">VM Marketplace</h1>
           <p className="text-gray-500 mt-2">Browse and deploy from our selection of pre-configured virtual machines</p>
         </div>
@@ -40,8 +45,10 @@ export default function MarketplacePage() {
         </div>
       </div>
     </div>
+    </div>
   )
 }
+
 
 function VMListingsSkeleton() {
   return (
@@ -61,6 +68,7 @@ function VMListingsSkeleton() {
           </div>
         ))}
     </div>
+    
   )
 }
 

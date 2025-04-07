@@ -7,6 +7,7 @@ import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import VMDeploymentForm from "@/components/vm-deployment-form"
 import VMReviews from "@/components/vm-reviews"
+import SiteHeader from "@/components/site-header"
 
 // Sample VM data - in a real app, this would come from an API
 const vmData = [
@@ -52,6 +53,9 @@ export default function VMDetailsPage({ params }: { params: { id: string } }) {
   }
 
   return (
+    <div className="flex flex-col min-h-screen">
+
+    <SiteHeader />
     <div className="container px-4 py-8 mx-auto">
       <div className="mb-6">
         <Link href="/marketplace" className="flex items-center text-blue-600 hover:text-blue-800">
@@ -214,6 +218,7 @@ export default function VMDetailsPage({ params }: { params: { id: string } }) {
           </div>
         </div>
       </div>
+    </div>
     </div>
   )
 }
