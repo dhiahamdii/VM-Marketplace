@@ -17,47 +17,32 @@ interface AuthContextType {
   user: User | null
   isLoading: boolean
   login: (email: string, password: string) => Promise<void>
-  signup: (name: string, email: string, password: string) => Promise<void>
+  signup: (email: string, password: string) => Promise<void>
   logout: () => void
+  token: string | null
 }
 
 // Create auth context
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-// Sample user data (in a real app, this would come from a database)
-const sampleUsers = [
-  {
-    id: "1",
-    email: "user@example.com",
-    password: "password123", // In a real app, this would be hashed
-    name: "John Doe",
-    role: "user" as const,
-    avatar: "/placeholder.svg?height=40&width=40",
-  },
-  {
-    id: "2",
-    email: "admin@example.com",
-    password: "admin123", // In a real app, this would be hashed
-    name: "Admin User",
-    role: "admin" as const,
-    avatar: "/placeholder.svg?height=40&width=40",
-  },
-]
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
+  const [token, setToken] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
 
   // Check for existing session on mount
   useEffect(() => {
+    const storedToken = localStorage.getItem("vm_marketplace_token")
     const storedUser = localStorage.getItem("vm_marketplace_user")
-    if (storedUser) {
+    
+    if (storedToken && storedUser) {
       try {
-        const parsedUser = JSON.parse(storedUser)
-        setUser(parsedUser)
+        setToken(storedToken)
+        setUser(JSON.parse(storedUser))
       } catch (error) {
-        console.error("Failed to parse stored user:", error)
+        console.error("Failed to parse stored auth data:", error)
+        localStorage.removeItem("vm_marketplace_token")
         localStorage.removeItem("vm_marketplace_user")
       }
     }
@@ -67,67 +52,112 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Login function
   const login = async (email: string, password: string) => {
     setIsLoading(true)
+    try {
+      const formData = new URLSearchParams()
+      formData.append('username', email)
+      formData.append('password', password)
 
-    // Simulate API call delay
-    await new Promise((resolve) => setTimeout(resolve, 1500))
+      const response = await fetch('http://localhost:8000/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: formData.toString()
+      })
 
-    // Find user with matching credentials
-    const foundUser = sampleUsers.find((u) => u.email === email && u.password === password)
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.detail || 'Login failed')
+      }
 
-    if (!foundUser) {
+      const data = await response.json()
+      const { access_token } = data
+
+      // Store token
+      setToken(access_token)
+      localStorage.setItem("vm_marketplace_token", access_token)
+
+      // Create user object
+      const userData = {
+        id: email, // Using email as ID for now
+        email,
+        name: email.split('@')[0],
+        role: "user" as const
+      }
+
+      setUser(userData)
+      localStorage.setItem("vm_marketplace_user", JSON.stringify(userData))
+
+    } catch (error) {
+      console.error('Login error:', error)
+      throw error
+    } finally {
       setIsLoading(false)
-      throw new Error("Invalid email or password")
     }
-
-    // Create user object without password
-    const { password: _, ...userWithoutPassword } = foundUser
-
-    // Store user in state and localStorage
-    setUser(userWithoutPassword)
-    localStorage.setItem("vm_marketplace_user", JSON.stringify(userWithoutPassword))
-
-    setIsLoading(false)
   }
 
   // Signup function
-  const signup = async (name: string, email: string, password: string) => {
+  const signup = async (email: string, password: string) => {
     setIsLoading(true)
+    try {
+      const response = await fetch('http://localhost:8000/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password
+        })
+      })
 
-    // Simulate API call delay
-    await new Promise((resolve) => setTimeout(resolve, 1500))
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.detail || 'Signup failed')
+      }
 
-    // Check if user already exists
-    if (sampleUsers.some((u) => u.email === email)) {
+      const data = await response.json()
+      const { access_token } = data
+
+      // Store token
+      setToken(access_token)
+      localStorage.setItem("vm_marketplace_token", access_token)
+
+      // Create user object
+      const userData = {
+        id: email,
+        email,
+        name: email.split('@')[0],
+        role: "user" as const
+      }
+
+      setUser(userData)
+      localStorage.setItem("vm_marketplace_user", JSON.stringify(userData))
+
+    } catch (error) {
+      console.error('Signup error:', error)
+      throw error
+    } finally {
       setIsLoading(false)
-      throw new Error("Email already in use")
     }
-
-    // Create new user
-    const newUser = {
-      id: `${sampleUsers.length + 1}`,
-      email,
-      name,
-      role: "user" as const,
-    }
-
-    // Store user in state and localStorage
-    setUser(newUser)
-    localStorage.setItem("vm_marketplace_user", JSON.stringify(newUser))
-
-    setIsLoading(false)
   }
 
   // Logout function
   const logout = () => {
     setUser(null)
+    setToken(null)
+    localStorage.removeItem("vm_marketplace_token")
     localStorage.removeItem("vm_marketplace_user")
-    router.push("/")
+    router.push("/auth/login")
   }
 
-  return <AuthContext.Provider value={{ user, isLoading, login, signup, logout }}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider value={{ user, isLoading, login, signup, logout, token }}>
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
-// Custom hook to use auth context
 export function useAuth() {
   const context = useContext(AuthContext)
   if (context === undefined) {

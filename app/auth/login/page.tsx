@@ -71,7 +71,8 @@ export default function LoginPage() {
           </Link>
 
           <Link href="/" className="flex items-center">
-            <Image src="/placeholder.svg?height=40&width=40" alt="Logo" width={40} height={40} />
+            <Image   src="/vm-huawei-logo.png"
+  alt="VM Marketplace Logo" width={40} height={40} />
             <span className="ml-2 font-bold text-xl">VM Marketplace</span>
           </Link>
         </div>

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import FeaturedVMs from "@/components/featured-vms"
 import SiteHeader from "@/components/site-header"
-
+import Image from "next/image";
 export default function Home() {
   return (
     <div className="flex flex-col min-h-screen">
@@ -18,6 +18,7 @@ export default function Home() {
               <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl">
                 VM Marketplace
               </h1>
+     
               <p className="mx-auto max-w-[700px] text-gray-300 md:text-xl">
                 Deploy virtual machines in seconds. Choose from thousands of pre-configured VMs.
                  {/* or create your own. */}

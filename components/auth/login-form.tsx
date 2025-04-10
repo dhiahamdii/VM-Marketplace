@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Loader2, Mail, Lock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -16,6 +16,7 @@ import { useAuth } from "@/components/auth/auth-provider"
 
 export default function LoginForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { login, isLoading } = useAuth()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -28,7 +29,12 @@ export default function LoginForm() {
 
     try {
       await login(email, password)
-      router.push("/dashboard")
+      const callbackUrl = searchParams.get('callbackUrl')
+      if (callbackUrl) {
+        router.push(callbackUrl)
+      } else {
+        router.push("/dashboard")
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to login")
     }

@@ -73,8 +73,13 @@ export default function RegisterForm() {
       return
     }
 
+    if (!email.includes('@')) {
+      setError("Please enter a valid email address")
+      return
+    }
+
     try {
-      await signup(name, email, password)
+      await signup(email, password)
       router.push("/dashboard")
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create account")
@@ -98,7 +103,7 @@ export default function RegisterForm() {
     <Card className="w-full max-w-md">
       <CardHeader>
         <CardTitle className="text-2xl">Create an Account</CardTitle>
-        <CardDescription>Sign up to access the VM marketplace</CardDescription>
+        <CardDescription>Enter your information to create an account</CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
@@ -113,6 +118,7 @@ export default function RegisterForm() {
             <div className="relative">
               <Input
                 id="name"
+                type="text"
                 placeholder="John Doe"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -153,23 +159,17 @@ export default function RegisterForm() {
               <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             </div>
             {password && (
-              <div className="space-y-1">
-                <div className="flex gap-1 h-1">
+              <div className="mt-2">
+                <div className="h-1 w-full bg-gray-200 rounded-full overflow-hidden">
                   <div
-                    className={`w-1/3 rounded-l ${passwordStrength ? getPasswordStrengthColor() : "bg-gray-200"}`}
-                  ></div>
-                  <div
-                    className={`w-1/3 ${passwordStrength === "medium" || passwordStrength === "strong" ? getPasswordStrengthColor() : "bg-gray-200"}`}
-                  ></div>
-                  <div
-                    className={`w-1/3 rounded-r ${passwordStrength === "strong" ? getPasswordStrengthColor() : "bg-gray-200"}`}
-                  ></div>
+                    className={`h-full ${getPasswordStrengthColor()} transition-all duration-300`}
+                    style={{
+                      width: passwordStrength === "weak" ? "33%" : passwordStrength === "medium" ? "66%" : "100%",
+                    }}
+                  />
                 </div>
-                <p className="text-xs text-gray-500">
-                  {passwordStrength === "weak" &&
-                    "Weak - Use at least 8 characters with uppercase, numbers, and symbols"}
-                  {passwordStrength === "medium" && "Medium - Add more character types for a stronger password"}
-                  {passwordStrength === "strong" && "Strong - Your password is secure"}
+                <p className="text-xs text-gray-500 mt-1">
+                  Password strength: {passwordStrength || "none"}
                 </p>
               </div>
             )}
@@ -190,12 +190,11 @@ export default function RegisterForm() {
             </div>
           </div>
 
-          <div className="flex items-start space-x-2">
+          <div className="flex items-center space-x-2">
             <Checkbox
               id="terms"
               checked={agreeTerms}
               onCheckedChange={(checked) => setAgreeTerms(checked as boolean)}
-              className="mt-1"
             />
             <Label htmlFor="terms" className="text-sm font-normal">
               I agree to the{" "}
@@ -218,14 +217,14 @@ export default function RegisterForm() {
                 Creating account...
               </>
             ) : (
-              "Create Account"
+              "Create account"
             )}
           </Button>
 
           <div className="text-center text-sm">
             Already have an account?{" "}
-            <Link href="/auth/login" className="text-blue-600 hover:text-blue-800 font-medium">
-              Log in
+            <Link href="/auth/login" className="text-blue-600 hover:text-blue-800">
+              Sign in
             </Link>
           </div>
         </CardFooter>

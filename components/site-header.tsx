@@ -1,12 +1,20 @@
 import Link from "next/link"
 import UserAccountNav from "@/components/user-account-nav"
+import Image from "next/image"
 
 export default function SiteHeader() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white">
       <div className="container flex h-16 items-center justify-between px-4">
         <Link href="/" className="flex items-center">
-          <span className="font-bold text-xl">VM Marketplace</span>
+          {/* <span className="font-bold text-xl">VM Marketplace</span> */}
+          <Image
+  src="/vm-huawei-logo.png"
+  alt="VM Marketplace Logo"
+  width={100}
+  height={100}
+  className="mx-auto rounded-xl"
+/>
         </Link>
 
         <nav className="hidden md:flex items-center gap-6">

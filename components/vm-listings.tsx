@@ -1,126 +1,50 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Star, ArrowRight, Server, MemoryStickIcon as Memory, HardDrive } from "lucide-react"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-
-// Sample VM data - in a real app, this would come from an API
-const vmData = [
-  {
-    id: 1,
-    title: "Ubuntu 22.04 LTS",
-    description: "General purpose Ubuntu server with latest LTS release",
-    provider: "CloudTech Solutions",
-    rating: 4.8,
-    reviews: 245,
-    price: 5.99,
-    image: "/placeholder.svg?height=200&width=300",
-    specs: {
-      cpu: "2 vCPU",
-      ram: "4 GB",
-      storage: "80 GB SSD",
-      os: "Ubuntu 22.04",
-    },
-    tags: ["Linux", "LTS", "Server"],
-  },
-  {
-    id: 2,
-    title: "Windows Server 2022",
-    description: "Enterprise-ready Windows Server with SQL Server pre-installed",
-    provider: "Microsoft Certified Partner",
-    rating: 4.6,
-    reviews: 189,
-    price: 24.99,
-    image: "/placeholder.svg?height=200&width=300",
-    specs: {
-      cpu: "4 vCPU",
-      ram: "16 GB",
-      storage: "250 GB SSD",
-      os: "Windows Server 2022",
-    },
-    tags: ["Windows", "SQL Server", "Enterprise"],
-  },
-  {
-    id: 3,
-    title: "Data Science Workbench",
-    description: "Pre-configured environment for data science with Python, R, and Jupyter",
-    provider: "DataLab Inc.",
-    rating: 4.9,
-    reviews: 312,
-    price: 12.99,
-    image: "/placeholder.svg?height=200&width=300",
-    specs: {
-      cpu: "8 vCPU",
-      ram: "32 GB",
-      storage: "500 GB SSD",
-      os: "Ubuntu 22.04",
-    },
-    tags: ["Data Science", "Python", "Jupyter"],
-  },
-  {
-    id: 4,
-    title: "CentOS 8 Web Server",
-    description: "Optimized for web hosting with Apache, Nginx, and PHP pre-configured",
-    provider: "DevOps Systems",
-    rating: 4.7,
-    reviews: 178,
-    price: 8.99,
-    image: "/placeholder.svg?height=200&width=300",
-    specs: {
-      cpu: "2 vCPU",
-      ram: "8 GB",
-      storage: "160 GB SSD",
-      os: "CentOS 8",
-    },
-    tags: ["Web Server", "Apache", "Nginx"],
-  },
-  {
-    id: 5,
-    title: "AI Development Environment",
-    description: "Ready-to-use environment for AI and ML with TensorFlow, PyTorch, and CUDA",
-    provider: "AI Cloud Services",
-    rating: 4.9,
-    reviews: 203,
-    price: 29.99,
-    image: "/placeholder.svg?height=200&width=300",
-    specs: {
-      cpu: "8 vCPU",
-      ram: "64 GB",
-      storage: "500 GB SSD",
-      os: "Ubuntu 22.04",
-    },
-    tags: ["AI", "Machine Learning", "GPU"],
-  },
-  {
-    id: 6,
-    title: "Debian 11 Minimal",
-    description: "Lightweight Debian server for maximum customization",
-    provider: "CloudTech Solutions",
-    rating: 4.5,
-    reviews: 156,
-    price: 3.99,
-    image: "/placeholder.svg?height=200&width=300",
-    specs: {
-      cpu: "1 vCPU",
-      ram: "2 GB",
-      storage: "40 GB SSD",
-      os: "Debian 11",
-    },
-    tags: ["Linux", "Minimal", "Lightweight"],
-  },
-]
+import { VirtualMachine } from "@/types/vm"
+import { listVMs } from "@/lib/api"
 
 export default function VMListings() {
+  const [vms, setVMs] = useState<VirtualMachine[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [sortOption, setSortOption] = useState("featured")
   const [hoveredVM, setHoveredVM] = useState<number | null>(null)
 
+  useEffect(() => {
+    loadVMs()
+  }, [])
+
+  async function loadVMs() {
+    try {
+      setLoading(true)
+      const data = await listVMs()
+      setVMs(data)
+      setError(null)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load VMs')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (loading) {
+    return <div>Loading...</div>
+  }
+
+  if (error) {
+    return <div className="text-red-500">Error: {error}</div>
+  }
+
   // Sort VMs based on selected option
-  const sortedVMs = [...vmData].sort((a, b) => {
+  const sortedVMs = [...vms].sort((a, b) => {
     switch (sortOption) {
       case "price-low":
         return a.price - b.price
@@ -136,7 +60,7 @@ export default function VMListings() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <p className="text-sm text-gray-500">Showing {vmData.length} results</p>
+        <p className="text-sm text-gray-500">Showing {vms.length} results</p>
         <div className="flex items-center space-x-2">
           <span className="text-sm">Sort by:</span>
           <Select value={sortOption} onValueChange={setSortOption}>
@@ -162,7 +86,7 @@ export default function VMListings() {
             onMouseLeave={() => setHoveredVM(null)}
           >
             <div className="relative h-48">
-              <Image src={vm.image || "/placeholder.svg"} alt={vm.title} fill className="object-cover" />
+              <Image src={vm.image || "/placeholder.svg"} alt={vm.name} fill className="object-cover" />
               <div className="absolute top-2 right-2">
                 <Badge variant="secondary" className="bg-white text-gray-900">
                   ${vm.price}/month
@@ -171,7 +95,7 @@ export default function VMListings() {
             </div>
             <CardHeader>
               <div className="flex justify-between items-start">
-                <CardTitle className="text-xl">{vm.title}</CardTitle>
+                <CardTitle className="text-xl">{vm.name}</CardTitle>
                 <div className="flex items-center">
                   <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
                   <span className="text-sm font-medium">{vm.rating}</span>
@@ -188,29 +112,27 @@ export default function VMListings() {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-gray-500 mb-4">{vm.description}</p>
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div className="flex items-center">
-                  <Server className="h-4 w-4 mr-2 text-gray-400" />
-                  <span>{vm.specs.cpu}</span>
+              <div className="space-y-2">
+                <div>
+                  <strong>Specifications:</strong>
+                  <ul className="list-disc list-inside">
+                    <li>{vm.specifications.cpu_cores} CPU Cores</li>
+                    <li>{vm.specifications.ram_gb}GB RAM</li>
+                    <li>{vm.specifications.storage_gb}GB Storage</li>
+                    <li>OS: {vm.specifications.os_type}</li>
+                  </ul>
                 </div>
-                <div className="flex items-center">
-                  <Memory className="h-4 w-4 mr-2 text-gray-400" />
-                  <span>{vm.specs.ram}</span>
-                </div>
-                <div className="flex items-center">
-                  <HardDrive className="h-4 w-4 mr-2 text-gray-400" />
-                  <span>{vm.specs.storage}</span>
-                </div>
-                <div className="flex items-center">
-                  <span className="font-medium">OS:</span>
-                  <span className="ml-2">{vm.specs.os}</span>
+                <div>
+                  <strong>Price:</strong> ${vm.price}
                 </div>
               </div>
               <p className="text-xs text-gray-500 mt-4">Provided by: {vm.provider}</p>
             </CardContent>
             <CardFooter>
               <div className="w-full flex justify-between items-center">
-                <span className="font-bold text-lg">${vm.price}/month</span>
+                <Badge variant={vm.status === 'available' ? 'default' : 'secondary'}>
+                  {vm.status}
+                </Badge>
                 <Link href={`/marketplace/${vm.id}`}>
                   <Button
                     className={`transition-all duration-300 ${hoveredVM === vm.id ? "bg-blue-600 hover:bg-blue-700" : ""}`}

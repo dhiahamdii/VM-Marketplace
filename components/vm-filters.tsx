@@ -8,25 +8,24 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+
+const osTypes = [
+  { id: "linux", label: "Linux" },
+  { id: "windows", label: "Windows" },
+  { id: "macos", label: "macOS" },
+]
 
 export default function VMFilters() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
   // Initialize state from URL params
-  const [priceRange, setPriceRange] = useState([0, 100])
+  const [priceRange, setPriceRange] = useState([0, 1000])
   const [selectedOS, setSelectedOS] = useState<string[]>([])
   const [selectedProviders, setSelectedProviders] = useState<string[]>([])
   const [selectedCPU, setSelectedCPU] = useState<string[]>([])
   const [selectedRAM, setSelectedRAM] = useState<string[]>([])
-
-  const operatingSystems = [
-    { id: "ubuntu", label: "Ubuntu" },
-    { id: "windows", label: "Windows" },
-    { id: "centos", label: "CentOS" },
-    { id: "debian", label: "Debian" },
-    { id: "redhat", label: "Red Hat" },
-  ]
 
   const providers = [
     { id: "cloudtech", label: "CloudTech Solutions" },
@@ -123,7 +122,7 @@ export default function VMFilters() {
   }
 
   const resetFilters = () => {
-    setPriceRange([0, 100])
+    setPriceRange([0, 1000])
     setSelectedOS([])
     setSelectedProviders([])
     setSelectedCPU([])
@@ -133,95 +132,107 @@ export default function VMFilters() {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-4">
-        <h3 className="font-medium">Price Range ($/month)</h3>
-        <div className="px-2">
-          <Slider defaultValue={priceRange} max={100} step={1} value={priceRange} onValueChange={setPriceRange} />
-          <div className="flex justify-between mt-2 text-sm text-gray-500">
-            <span>${priceRange[0]}</span>
-            <span>${priceRange[1]}</span>
+      <Card>
+        <CardHeader>
+          <CardTitle>Price Range</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <Slider
+              min={0}
+              max={1000}
+              step={10}
+              value={priceRange}
+              onValueChange={setPriceRange}
+            />
+            <div className="flex justify-between text-sm">
+              <span>${priceRange[0]}</span>
+              <span>${priceRange[1]}</span>
+            </div>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
-      <Separator />
-
-      <Accordion type="multiple" defaultValue={["os", "provider", "specs"]}>
-        <AccordionItem value="os">
-          <AccordionTrigger>Operating System</AccordionTrigger>
-          <AccordionContent>
-            <div className="space-y-2">
-              {operatingSystems.map((os) => (
-                <div key={os.id} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`os-${os.id}`}
-                    checked={selectedOS.includes(os.id)}
-                    onCheckedChange={(checked) => handleOSChange(os.id, checked as boolean)}
-                  />
-                  <Label htmlFor={`os-${os.id}`}>{os.label}</Label>
-                </div>
-              ))}
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem value="provider">
-          <AccordionTrigger>Provider</AccordionTrigger>
-          <AccordionContent>
-            <div className="space-y-2">
-              {providers.map((provider) => (
-                <div key={provider.id} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`provider-${provider.id}`}
-                    checked={selectedProviders.includes(provider.id)}
-                    onCheckedChange={(checked) => handleProviderChange(provider.id, checked as boolean)}
-                  />
-                  <Label htmlFor={`provider-${provider.id}`}>{provider.label}</Label>
-                </div>
-              ))}
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem value="specs">
-          <AccordionTrigger>Specifications</AccordionTrigger>
-          <AccordionContent>
-            <div className="space-y-4">
-              <div>
-                <h4 className="font-medium mb-2">CPU</h4>
-                <div className="space-y-2">
-                  {cpuOptions.map((cpu) => (
-                    <div key={cpu.id} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`cpu-${cpu.id}`}
-                        checked={selectedCPU.includes(cpu.id)}
-                        onCheckedChange={(checked) => handleCPUChange(cpu.id, checked as boolean)}
-                      />
-                      <Label htmlFor={`cpu-${cpu.id}`}>{cpu.label}</Label>
-                    </div>
-                  ))}
-                </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Operating System</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {osTypes.map((os) => (
+              <div key={os.id} className="flex items-center space-x-2">
+                <Checkbox
+                  id={os.id}
+                  checked={selectedOS.includes(os.id)}
+                  onCheckedChange={(checked) => handleOSChange(os.id, checked as boolean)}
+                />
+                <Label htmlFor={os.id}>{os.label}</Label>
               </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
-              <div>
-                <h4 className="font-medium mb-2">RAM</h4>
-                <div className="space-y-2">
-                  {ramOptions.map((ram) => (
-                    <div key={ram.id} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`ram-${ram.id}`}
-                        checked={selectedRAM.includes(ram.id)}
-                        onCheckedChange={(checked) => handleRAMChange(ram.id, checked as boolean)}
-                      />
-                      <Label htmlFor={`ram-${ram.id}`}>{ram.label}</Label>
-                    </div>
-                  ))}
-                </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Provider</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {providers.map((provider) => (
+              <div key={provider.id} className="flex items-center space-x-2">
+                <Checkbox
+                  id={provider.id}
+                  checked={selectedProviders.includes(provider.id)}
+                  onCheckedChange={(checked) => handleProviderChange(provider.id, checked as boolean)}
+                />
+                <Label htmlFor={provider.id}>{provider.label}</Label>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Specifications</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div>
+              <h4 className="font-medium mb-2">CPU</h4>
+              <div className="space-y-2">
+                {cpuOptions.map((cpu) => (
+                  <div key={cpu.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={cpu.id}
+                      checked={selectedCPU.includes(cpu.id)}
+                      onCheckedChange={(checked) => handleCPUChange(cpu.id, checked as boolean)}
+                    />
+                    <Label htmlFor={cpu.id}>{cpu.label}</Label>
+                  </div>
+                ))}
               </div>
             </div>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+
+            <div>
+              <h4 className="font-medium mb-2">RAM</h4>
+              <div className="space-y-2">
+                {ramOptions.map((ram) => (
+                  <div key={ram.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={ram.id}
+                      checked={selectedRAM.includes(ram.id)}
+                      onCheckedChange={(checked) => handleRAMChange(ram.id, checked as boolean)}
+                    />
+                    <Label htmlFor={ram.id}>{ram.label}</Label>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="flex flex-col space-y-2 pt-4">
         <Button onClick={applyFilters}>Apply Filters</Button>
