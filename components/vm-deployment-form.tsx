@@ -1,14 +1,10 @@
 "use client"
 
-import type React from "react"
-import type { PaymentMethod } from "@stripe/stripe-js"
-
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "./auth/auth-provider"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
-import { useStripe } from "@/components/stripe/stripe-provider"
 import { Elements } from "@stripe/react-stripe-js"
 import { loadStripe } from "@stripe/stripe-js"
 import PaymentMethodForm from "@/components/stripe/payment-method-form"
@@ -36,13 +32,54 @@ export default function VMDeploymentForm({ vm }: VMDeploymentFormProps) {
   const { user } = useAuth()
   const router = useRouter()
   const { toast } = useToast()
-  const { paymentMethods, selectedPaymentMethod, createCheckoutSession } = useStripe()
   const [region, setRegion] = useState(vm.regions?.[0] || "us-east-1")
   const [quantity, setQuantity] = useState(1)
   const [isDeploying, setIsDeploying] = useState(false)
   const [showCheckout, setShowCheckout] = useState(false)
+  const [clientSecret, setClientSecret] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   const totalPrice = vm.price * quantity
+
+  useEffect(() => {
+    if (showCheckout && user) {
+      const createPaymentIntent = async () => {
+        try {
+          const response = await fetch("/api/stripe/create-payment-intent", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              vmId: vm.id,
+              quantity,
+              region,
+            }),
+          })
+
+          if (!response.ok) {
+            throw new Error("Failed to create payment intent")
+          }
+
+          const data = await response.json()
+          if (!data.clientSecret) {
+            throw new Error("No client secret received")
+          }
+          setClientSecret(data.clientSecret)
+        } catch (err) {
+          console.error("Payment intent error:", err)
+          setError(err instanceof Error ? err.message : "Failed to initialize payment")
+          toast({
+            title: "Error",
+            description: "Failed to initialize payment. Please try again.",
+            variant: "destructive",
+          })
+        }
+      }
+
+      createPaymentIntent()
+    }
+  }, [showCheckout, user, vm.id, quantity, region, toast])
 
   const handleDeploy = async () => {
     if (!user) {
@@ -50,29 +87,7 @@ export default function VMDeploymentForm({ vm }: VMDeploymentFormProps) {
       return
     }
 
-    if (!selectedPaymentMethod) {
-      setShowCheckout(true)
-      return
-    }
-
-    try {
-      setIsDeploying(true)
-      const { url } = await createCheckoutSession(vm.id, selectedPaymentMethod.id)
-      if (url) {
-        router.push(url)
-      } else {
-        throw new Error("Failed to create checkout session")
-      }
-    } catch (error) {
-      console.error("Deployment error:", error)
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to deploy VM. Please try again.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsDeploying(false)
-    }
+    setShowCheckout(true)
   }
 
   if (!user) {
@@ -133,14 +148,39 @@ export default function VMDeploymentForm({ vm }: VMDeploymentFormProps) {
       </div>
 
       {showCheckout ? (
-        <Elements stripe={stripePromise}>
-          <PaymentMethodForm
-            vmId={vm.id}
-            quantity={quantity}
-            region={region}
-            onSuccess={handleDeploy}
-          />
-        </Elements>
+        clientSecret ? (
+          <Elements stripe={stripePromise} options={{ clientSecret }}>
+            <PaymentMethodForm
+              vmId={vm.id}
+              quantity={quantity}
+              region={region}
+              onSuccess={() => {
+                setShowCheckout(false)
+                toast({
+                  title: "Success",
+                  description: "Payment processed successfully",
+                })
+              }}
+            />
+          </Elements>
+        ) : error ? (
+          <div className="rounded-lg border border-destructive p-6">
+            <h3 className="text-lg font-medium text-destructive">Error</h3>
+            <p className="mt-2 text-sm text-muted-foreground">{error}</p>
+            <Button
+              onClick={() => setShowCheckout(false)}
+              className="mt-4 w-full"
+            >
+              Try Again
+            </Button>
+          </div>
+        ) : (
+          <div className="rounded-lg border p-6">
+            <div className="flex items-center justify-center p-8">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+            </div>
+          </div>
+        )
       ) : (
         <Button
           onClick={handleDeploy}
