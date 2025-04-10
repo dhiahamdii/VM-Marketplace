@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast"
 import { useStripe } from "@/components/stripe/stripe-provider"
 import { Elements } from "@stripe/react-stripe-js"
 import { loadStripe } from "@stripe/stripe-js"
-import { PaymentMethodForm } from "@/components/stripe/payment-method-form"
+import PaymentMethodForm from "@/components/stripe/payment-method-form"
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
