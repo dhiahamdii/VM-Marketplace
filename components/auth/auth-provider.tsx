@@ -17,7 +17,7 @@ interface AuthContextType {
   user: User | null
   isLoading: boolean
   login: (email: string, password: string) => Promise<void>
-  signup: (email: string, password: string) => Promise<void>
+  signup: (email: string, password: string, name: string) => Promise<void>
   logout: () => void
   token: string | null
 }
@@ -71,20 +71,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       const data = await response.json()
-      const { access_token } = data
+      const { access_token, refresh_token } = data
 
-      // Store token
+      // Store tokens
       setToken(access_token)
       localStorage.setItem("vm_marketplace_token", access_token)
+      localStorage.setItem("vm_marketplace_refresh_token", refresh_token)
 
-      // Create user object
-      const userData = {
-        id: email, // Using email as ID for now
-        email,
-        name: email.split('@')[0],
-        role: "user" as const
+      // Get user info
+      const userResponse = await fetch('http://localhost:8000/auth/me', {
+        headers: {
+          'Authorization': `Bearer ${access_token}`
+        }
+      })
+
+      if (!userResponse.ok) {
+        throw new Error('Failed to get user info')
       }
 
+      const userData = await userResponse.json()
       setUser(userData)
       localStorage.setItem("vm_marketplace_user", JSON.stringify(userData))
 
@@ -97,7 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   // Signup function
-  const signup = async (email: string, password: string) => {
+  const signup = async (email: string, password: string, name: string) => {
     setIsLoading(true)
     try {
       const response = await fetch('http://localhost:8000/auth/register', {
@@ -107,7 +112,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         },
         body: JSON.stringify({
           email,
-          password
+          password,
+          name
         })
       })
 
@@ -127,7 +133,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const userData = {
         id: email,
         email,
-        name: email.split('@')[0],
+        name,
         role: "user" as const
       }
 

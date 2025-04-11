@@ -35,8 +35,8 @@ export default function PaymentSuccessPage() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "Authorization": `Bearer ${localStorage.getItem("vm_marketplace_token")}`,
           },
-          credentials: "include", // Important: Include credentials for session
           body: JSON.stringify({
             paymentIntent,
             paymentIntentClientSecret,

@@ -79,7 +79,7 @@ export default function RegisterForm() {
     }
 
     try {
-      await signup(email, password)
+      await signup(email, password, name)
       router.push("/dashboard")
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create account")
