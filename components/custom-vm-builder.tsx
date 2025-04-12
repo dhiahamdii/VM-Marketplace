@@ -178,20 +178,50 @@ export default function CustomVMBuilder() {
   }
 
   // Handle deploy
-  const handleDeploy = () => {
-    if (paymentMethods.length === 0) {
-      setShowCheckout(true)
-      return
+  const handleDeploy = async () => {
+    try {
+      // Create VM in database
+      const response = await fetch('/api/vms', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: vmConfig.name,
+          description: `Custom VM with ${vmConfig.cpu.cores} vCPU, ${vmConfig.memory.size} GB RAM`,
+          specifications: {
+            cpu_cores: vmConfig.cpu.cores,
+            ram_gb: vmConfig.memory.size,
+            storage_gb: vmConfig.storage.size,
+            os_type: vmConfig.os.name
+          },
+          price: totalPrice,
+          image_type: vmConfig.os.type,
+          status: 'created',
+          tags: ['custom-vm', vmConfig.os.type.toLowerCase()]
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create VM');
+      }
+
+      const createdVM = await response.json();
+
+      toast({
+        title: "VM Created Successfully",
+        description: "Your custom VM has been created and stored in the database.",
+      });
+
+      // Redirect to the VM details page
+      router.push(`/marketplace/${createdVM.id}`);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to create VM. Please try again.",
+        variant: "destructive",
+      });
     }
-
-    // In a real app, you would create the VM and then redirect to a deployment page
-    toast({
-      title: "VM Configuration Saved",
-      description: "Redirecting to checkout...",
-    })
-
-    // Show checkout
-    setShowCheckout(true)
   }
 
   // Handle payment success
@@ -384,7 +414,9 @@ export default function CustomVMBuilder() {
                 <Button variant="outline" onClick={handlePrevStep}>
                   Back
                 </Button>
-                <Button onClick={handleDeploy}>Deploy VM</Button>
+                <Button onClick={handleDeploy} className="w-full">
+                  Create VM
+                </Button>
               </CardFooter>
             </Card>
           </TabsContent>
