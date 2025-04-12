@@ -3,7 +3,7 @@ import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
 import CustomVMBuilder from "@/components/custom-vm-builder"
-
+import SiteHeader from "@/components/site-header"
 export const metadata: Metadata = {
   title: "Build Custom VM | VM Marketplace",
   description: "Create a custom virtual machine with your preferred specifications",
@@ -11,6 +11,8 @@ export const metadata: Metadata = {
 
 export default function CustomVMPage() {
   return (
+    <div className="flex flex-col min-h-screen">
+      <SiteHeader />
     <div className="container px-4 py-8 mx-auto">
       <div className="flex flex-col space-y-6">
         <div className="flex items-center gap-2">
@@ -29,6 +31,7 @@ export default function CustomVMPage() {
 
         <CustomVMBuilder />
       </div>
+    </div>
     </div>
   )
 }

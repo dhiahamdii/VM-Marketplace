@@ -35,6 +35,13 @@ export default function CustomVMPricingSummary({ vmConfig, totalPrice }: CustomV
             <span className="font-medium">${vmConfig.storage.price}/mo</span>
           </div>
 
+          <div className="flex justify-between">
+            <span className="text-gray-500">
+              Network ({vmConfig.network.bandwidth} Gbps {vmConfig.network.type})
+            </span>
+            <span className="font-medium">${vmConfig.network.price}/mo</span>
+          </div>
+
           {vmConfig.os.price > 0 && (
             <div className="flex justify-between">
               <span className="text-gray-500">OS ({vmConfig.os.name})</span>

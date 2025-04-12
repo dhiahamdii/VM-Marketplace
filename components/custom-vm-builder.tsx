@@ -16,8 +16,9 @@ import CustomVMAddonsSelector from "@/components/custom-vm-addons-selector"
 import CustomVMPricingSummary from "@/components/custom-vm-pricing-summary"
 import { useStripe } from "@/components/stripe/stripe-provider"
 import StripeCheckout from "@/components/stripe/stripe-checkout"
+import CustomVMNetworkSelector from "@/components/custom-vm-network-selector"
 
-// Define VM configuration type
+// Update the VMConfiguration interface to include network settings
 export interface VMConfiguration {
   name: string
   cpu: {
@@ -31,6 +32,11 @@ export interface VMConfiguration {
   storage: {
     size: number
     type: "SSD" | "NVMe SSD"
+    price: number
+  }
+  network: {
+    bandwidth: number
+    type: "Standard" | "Premium" | "Enterprise"
     price: number
   }
   os: {
@@ -59,6 +65,7 @@ export default function CustomVMBuilder() {
   const { paymentMethods } = useStripe()
   const [activeTab, setActiveTab] = useState("specs")
   const [showCheckout, setShowCheckout] = useState(false)
+  // Update the initial vmConfig state to include network settings
   const [vmConfig, setVMConfig] = useState<VMConfiguration>({
     name: "My Custom VM",
     cpu: {
@@ -73,6 +80,11 @@ export default function CustomVMBuilder() {
       size: 100,
       type: "SSD",
       price: 10,
+    },
+    network: {
+      bandwidth: 1,
+      type: "Standard",
+      price: 0,
     },
     os: {
       name: "Ubuntu 22.04 LTS",
@@ -119,7 +131,12 @@ export default function CustomVMBuilder() {
   // Calculate total price
   const calculateTotalPrice = () => {
     const basePrice =
-      vmConfig.cpu.price + vmConfig.memory.price + vmConfig.storage.price + vmConfig.os.price + vmConfig.region.price
+      vmConfig.cpu.price +
+      vmConfig.memory.price +
+      vmConfig.storage.price +
+      vmConfig.os.price +
+      vmConfig.region.price +
+      vmConfig.network.price
     const addonsPrice = vmConfig.addons.reduce((total, addon) => (addon.selected ? total + addon.price : total), 0)
     return basePrice + addonsPrice
   }
@@ -142,19 +159,21 @@ export default function CustomVMBuilder() {
     }))
   }
 
-  // Handle next step
+  // Update the handleNextStep function
   const handleNextStep = () => {
     if (activeTab === "specs") setActiveTab("os")
-    else if (activeTab === "os") setActiveTab("region")
+    else if (activeTab === "os") setActiveTab("network")
+    else if (activeTab === "network") setActiveTab("region")
     else if (activeTab === "region") setActiveTab("addons")
     else if (activeTab === "addons") setActiveTab("review")
   }
 
-  // Handle previous step
+  // Update the handlePrevStep function
   const handlePrevStep = () => {
     if (activeTab === "review") setActiveTab("addons")
     else if (activeTab === "addons") setActiveTab("region")
-    else if (activeTab === "region") setActiveTab("os")
+    else if (activeTab === "region") setActiveTab("network")
+    else if (activeTab === "network") setActiveTab("os")
     else if (activeTab === "os") setActiveTab("specs")
   }
 
@@ -203,9 +222,10 @@ export default function CustomVMBuilder() {
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
       <div className="lg:col-span-2">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="specs">Specs</TabsTrigger>
             <TabsTrigger value="os">OS</TabsTrigger>
+            <TabsTrigger value="network">Network</TabsTrigger>
             <TabsTrigger value="region">Region</TabsTrigger>
             <TabsTrigger value="addons">Add-ons</TabsTrigger>
             <TabsTrigger value="review">Review</TabsTrigger>
@@ -224,6 +244,20 @@ export default function CustomVMBuilder() {
 
           <TabsContent value="os" className="space-y-6">
             <CustomVMOSSelector vmConfig={vmConfig} updateVMConfig={updateVMConfig} />
+
+            <div className="flex justify-between">
+              <Button variant="outline" onClick={handlePrevStep}>
+                Back
+              </Button>
+              <Button onClick={handleNextStep}>
+                Next: Network
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="network" className="space-y-6">
+            <CustomVMNetworkSelector vmConfig={vmConfig} updateVMConfig={updateVMConfig} />
 
             <div className="flex justify-between">
               <Button variant="outline" onClick={handlePrevStep}>
@@ -313,6 +347,17 @@ export default function CustomVMBuilder() {
                         {vmConfig.region.name} ({vmConfig.region.location})
                       </p>
                     </div>
+                  </div>
+                </div>
+
+                {/* Add network information to the review tab */}
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-gray-500">Network</p>
+                  <div className="flex items-center">
+                    <Globe className="h-4 w-4 mr-2 text-blue-500" />
+                    <p className="font-medium">
+                      {vmConfig.network.bandwidth} Gbps ({vmConfig.network.type})
+                    </p>
                   </div>
                 </div>
 

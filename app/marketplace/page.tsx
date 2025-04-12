@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import SiteHeader from "@/components/site-header"
 
 export const metadata: Metadata = {
   title: "VM Marketplace | Browse Virtual Machines",
@@ -16,6 +17,8 @@ export const metadata: Metadata = {
 
 export default function MarketplacePage() {
   return (
+    <div className="flex flex-col min-h-screen">
+      <SiteHeader />
     <div className="container px-4 py-8 mx-auto">
       <div className="flex flex-col space-y-6">
         <div>
@@ -51,6 +54,8 @@ export default function MarketplacePage() {
         </div>
       </div>
     </div>
+    </div>
+
   )
 }
 
