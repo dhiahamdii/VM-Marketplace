@@ -13,6 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useAuth } from "@/components/auth/auth-provider"
+import { SocialLoginButtons } from "@/components/auth/social-login-buttons"
 
 export default function RegisterForm() {
   const router = useRouter()
@@ -207,6 +208,8 @@ export default function RegisterForm() {
               </Link>
             </Label>
           </div>
+          <SocialLoginButtons mode="register" />
+
         </CardContent>
 
         <CardFooter className="flex flex-col space-y-4">

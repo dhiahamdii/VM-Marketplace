@@ -13,6 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useAuth } from "@/components/auth/auth-provider"
+import { SocialLoginButtons } from "@/components/auth/social-login-buttons"
 
 export default function LoginForm() {
   const router = useRouter()
@@ -100,6 +101,8 @@ export default function LoginForm() {
               Remember me for 30 days
             </Label>
           </div>
+          <SocialLoginButtons mode="login" />
+
         </CardContent>
 
         <CardFooter className="flex flex-col space-y-4">

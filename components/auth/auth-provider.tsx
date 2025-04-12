@@ -9,6 +9,7 @@ export interface User {
   email: string
   name: string
   role: "user" | "admin" | "provider"
+  provider?: string
   avatar?: string
 }
 
@@ -18,6 +19,8 @@ interface AuthContextType {
   isLoading: boolean
   login: (email: string, password: string) => Promise<void>
   signup: (email: string, password: string, name: string) => Promise<void>
+  socialLogin: (provider: string) => Promise<void>
+
   logout: () => void
   token: string | null
 }
@@ -101,6 +104,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  // Social login function
+  const socialLogin = async (provider: string) => {
+    setIsLoading(true)
+    try {
+      // Redirect to backend social auth endpoint
+      const response = await fetch(`http://localhost:8000/auth/social/${provider}`, {
+        method: 'GET',
+        credentials: 'include',
+      })
+
+      if (!response.ok) {
+        throw new Error(`Social login failed for provider: ${provider}`)
+      }
+
+      const data = await response.json()
+      const { access_token, refresh_token } = data
+
+      // Store tokens
+      setToken(access_token)
+      localStorage.setItem("vm_marketplace_token", access_token)
+      localStorage.setItem("vm_marketplace_refresh_token", refresh_token)
+
+      // Get user info
+      const userResponse = await fetch('http://localhost:8000/auth/me', {
+        headers: {
+          'Authorization': `Bearer ${access_token}`
+        }
+      })
+
+      if (!userResponse.ok) {
+        throw new Error('Failed to get user info')
+      }
+
+      const userData = await userResponse.json()
+      setUser(userData)
+      localStorage.setItem("vm_marketplace_user", JSON.stringify(userData))
+
+    } catch (error) {
+      console.error('Social login error:', error)
+      throw error
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   // Signup function
   const signup = async (email: string, password: string, name: string) => {
     setIsLoading(true)
@@ -156,9 +204,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem("vm_marketplace_user")
     router.push("/auth/login")
   }
-
+ 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, signup, logout, token }}>
+    <AuthContext.Provider value={{ user, isLoading, login, signup, logout, socialLogin, token }}>
       {children}
     </AuthContext.Provider>
   )
